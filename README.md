@@ -1,13 +1,13 @@
 # ExcelUtils使用指南
 
+## 简介 
+一个前端表格处理组件
 ### 使用指南
 
 #### 使用引入
 
-注意：需要确保项目有ExcelUtils代码实现，代码在 **核心代码**
-
 ```
-import { ExcelUtils } from '@/utils/data2Excel.js'  // 此处路径为对应系统工具类路径
+import { ExcelUtils } from 'excel-utils-bt'  
 ```
 
 #### 简单使用
