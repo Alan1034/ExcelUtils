@@ -18,7 +18,7 @@
   "devDependencies": {},
   "repository": {
     "type": "git",
-    "url": "https://github.com/Alan1034/VueNpmFrame.git"
+    "url": "https://github.com/Alan1034/ExcelUtils"
   },
   "dependencies": {
     "axios": "^0.21.1",
