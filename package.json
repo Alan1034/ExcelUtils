@@ -1,0 +1,28 @@
+{
+  "name": "excel-utils",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./src/index.js",
+  "scripts": {
+    "serve": "webpack-dev-server --config config/webpack.dev.js",
+    "build": "webpack --config config/webpack.prod.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ExcelUtils",
+    "excel-utils",
+    "npm"
+  ],
+  "author": "chendeli419287484@qq.com",
+  "license": "ISC",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Alan1034/VueNpmFrame.git"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "exceljs": "^4.3.0",
+    "file-saver": "^2.0.1"
+  }
+}
