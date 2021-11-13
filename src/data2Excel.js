@@ -11,6 +11,9 @@ class ClassExcelUtils {
 		this.wb = new ExcelJs.Workbook()
 		this.filename = filename
 		this.supportImgExts = ['jpeg', 'png', 'gif']
+		this.sheetMap = {}
+		this.metaDataMap = {}
+		this.sheetNum = 0
 	}
 
 	getPercentage() {
@@ -25,43 +28,105 @@ class ClassExcelUtils {
 		if (metaData == null || metaData.length == 0) {
 			throw new Error('metaData should not be empty')
 		}
-		console.time(this.filename + 'excel执行耗时')
-		return new Promise((resolve, reject) => {
-			this.createSheet(this.wb, sheetName, metaData, datas).then(res => {
-				console.timeEnd(this.filename + 'excel执行耗时')
-				resolve(res)
-			}).catch(error => {
-				reject(error)
-			})
-		})
+		this.sheetMap[sheetName] = datas
+		this.metaDataMap[sheetName] = metaData
+		this.sheetNum = this.sheetNum + 1
+	}
+
+	addJsonToSheet(sheetName, jsonData) {
+		sheetName = sheetName || 'Sheet1'
+		if (!this.wb) {
+			throw new Error(`workbook's instance not exist`)
+		}
+		var metaData = this.dataToMetaData(jsonData[0])
+		this.sheetMap[sheetName] = jsonData
+		this.metaDataMap[sheetName] = metaData
+	}
+	dataToMetaData(data) {
+		var metaData = []
+		var ind = 1
+		for (var field in data) {
+			var meta = {
+				prop: field,
+				label: field,
+				excel: {
+					sort: ind
+				}
+			}
+			metaData.push(meta)
+			ind++
+		}
+		return metaData
+	}
+
+	addAoaToSheet(sheetName, header) {
+		sheetName = sheetName || 'Sheet1'
+		if (!this.wb) {
+			throw new Error(`workbook's instance not exist`)
+		}
+		var metaData = this.headerToMetaData(header)
+		this.sheetMap[sheetName] = []
+		this.metaDataMap[sheetName] = metaData
+	}
+	headerToMetaData(data) {
+		var metaData = []
+		for (var i in data) {
+			var field = data[i]
+			var meta = {
+				prop: field,
+				label: field,
+				excel: {
+					sort: Number(i) + 1
+				}
+			}
+			metaData.push(meta)
+		}
+		return metaData
 	}
 
 	async exportExcel() {
 		var filename = this.filename || ''
 		const wb = this.wb
+		var sheetMap = this.sheetMap
+		var metaDataMap = this.metaDataMap
+		for (var sheetName in sheetMap) {
+			console.time('导出:' + sheetName + '执行耗时')
+			var metaData = metaDataMap[sheetName] || []
+			var data = sheetMap[sheetName] || []
+			var [err, res] = await this.createSheet(this.wb, sheetName, metaData, data)
+				.then(res => [null, res]).catch(err => [err, null])
+			console.timeEnd('导出:' + sheetName + '执行耗时')
+			if (err) {
+				throw new Error('导出Excel异常:' + err)
+			}
+		}
+		this.sheetMap = {}
+		this.metaDataMap = {}
+		this.imageCache = {}
+		this.sheetNum = 0
+		this.percentage = 0
 		var res = await wb.xlsx.writeBuffer()
 		const blob = new Blob([res], {
 			type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 		});
-		// 回收内存
-		this.imageCache = {}
-		return saveAs(blob, filename + new Date().getHours() + ':' +
-			new Date().getMinutes() + ':' + new Date().getSeconds() + '.xlsx');
+		return saveAs(blob, filename + '.xlsx');
 	}
 
 	async createSheet(workbook, sheetName, metaData, datas) {
 		const ws = workbook.addWorksheet(sheetName)
 		this.setCellWidth(ws, metaData)
-
 		let allFieldItems = this.traverseTree({ children: metaData }, true).map(item => {
 			if (item.excel) {
 				return { ...item, excel_sort: item.excel.sort }
+			} else if (item.label) {
+				return { ...item, excel_sort: 0 }
 			}
 		}).filter(item => item != null)
 		let colfieldItems = allFieldItems.filter(item => !item.children || item.children.length == 0)
 		let fields = colfieldItems.sort((a, b) => a.excel_sort - b.excel_sort).map(item => item.prop)
 		var headerLabelArrs = this.getHeaderLabelArrs({ children: metaData })
 		var headerArr = this.getHeaderArr(headerLabelArrs, allFieldItems)
+
 		var titleHeight = headerArr.length
 
 		for (var i = titleHeight - 1; i >= 0; i--) {
@@ -115,9 +180,10 @@ class ClassExcelUtils {
 
 	async insertDataToSheet(workbook, sheet, titleHeight, fields, metaDataMap, datas) {
 		var total = datas.length
+		var sheetNum = this.sheetNum
 		for (var i in datas) {
 			await this.createCells(workbook, sheet, i, titleHeight, fields, metaDataMap, datas[i]).catch(error => console.log('创建单元格异常:' + error))
-			var cal = (Number(i) + 1) / total * 100
+			var cal = (Number(i) + 1) / total / sheetNum * 100
 			this.percentage = cal.toFixed(2)
 		}
 	}
@@ -224,14 +290,17 @@ class ClassExcelUtils {
 	calMerges(headerArr) {
 		var height = headerArr.length
 		var colorMap = []
+		var lenArr = headerArr.map(item => {
+			return item.length
+		})
+		var len = Math.max(...lenArr)
 		for (var h = 0; h < height; h++) {
-			var initArr = Array(headerArr[0].length).fill(0)
+			var initArr = Array(len).fill(0)
 			colorMap.push(initArr)
 		}
 		var merges = []
 		for (let i = 0; i < height; i++) {
 			var header = headerArr[i]
-			var len = header.length
 			for (var j = 0; j < len; j++) {
 				if (!header[j]) continue
 				if (colorMap[i][j] == 1) continue
@@ -254,7 +323,6 @@ class ClassExcelUtils {
 					tempRow++
 				} while (tempRow < height)
 				var xy = this.rangeExist(startRow, tempRow, startCol, tempCol, headerArr, colorMap)
-				// console.log('染色====>'+startRow+','+startCol+'-'+xy[0]+','+xy[1])
 				this.dye(startRow, xy[0], startCol, xy[1], colorMap)
 				if (startRow === xy[0] && startCol === xy[1]) {
 
@@ -279,7 +347,7 @@ class ClassExcelUtils {
 		let b = Math.floor(num / 26) - 1
 		str = String.fromCharCode(a + 65) + str
 		if (b === -1) return str
-		return calChar(b, str)
+		return this.calChar(b, str)
 	}
 
 	dye(startRow, endRow, startCol, endCol, colorMap) {
@@ -367,15 +435,18 @@ class ClassExcelUtils {
 		}
 		for (var i in headerLabelArrs) {
 			var headerValArr = headerLabelArrs[i]
-			headerValArr.forEach(item => {
+			for (var index = headerValArr.length; index >= 0; index--) {
+				var item = headerValArr[index]
 				if (fieldMap[item]) {
-					var col = fieldMap[item].excel_sort
+					var col = fieldMap[item].excel_sort || 0
 					var val = item || ''
-					headerDatas[i][col - 1] = val
-				} else {
-					headerDatas[i][col - 1] = ''
+					if (col - 1 > -1) {
+						headerDatas[i][col - 1] = val
+					} else {
+						headerDatas[i][index] = val
+					}
 				}
-			})
+			}
 		}
 		return headerDatas
 	}
