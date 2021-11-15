@@ -305,7 +305,7 @@ export default {
 [
     {
           label: '前幅图片', // 表头命名
-          prop: 'frontPicUrl', // 数据字段
+          prop: 'frontPicUrl', // 数据字段,必传,传入唯一值
           type: 'image', // 当类型为image时会自动导出为图片
           formatter: v => { // 当存在formatter时导出会执行该formatter函数
             return v.frontPicUrl ? v.frontPicUrl + '?x-oss-process=image/resize,w_70,m_mfit/quality,Q_90' : ''
