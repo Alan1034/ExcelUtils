@@ -47,7 +47,8 @@
   "dependencies": {
     "axios": "^1.12.2",
     "exceljs": "^4.4.0",
-    "file-saver": "^2.0.5"
+    "file-saver": "^2.0.5",
+    "xlsx": "^0.18.5"
   },
   "typings": "./dist/index.d.ts",
   "module": "./dist/index.js",
