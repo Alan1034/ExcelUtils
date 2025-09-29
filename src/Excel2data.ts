@@ -43,39 +43,46 @@ class ClassExcelReadUtils {
     return fileReader;
   }
 
-  dealData(fileBase64, getdata, type) {
+  async dealBase64Data(fileBase64, getdata, type) {
     if (!fileBase64) {
       return;
     }
     const fileReader = this.readXlsx(fileBase64);
-    fileReader.onload = (ev) => {
-      let workbook = null;
-      let datas = [];
-      try {
-        const data = ev.target.result;
-        workbook = XLSX.read(data, {
-          type: "binary",
-        }); // 以二进制流方式读取得到整份excel表格对象 //  // 存储获取到的数据
-      } catch (e) {
-        // console.log('文件类型不正确');
-      } // 表格的表格范围，可用于判断表头是否数量是否正确 // let fromTo = ''; // 遍历每张表读取
-      for (const sheet in workbook.Sheets) {
-        // if (workbook.Sheets.hasOwnProperty(sheet)) {
-        if (Object.prototype.hasOwnProperty.call(workbook.Sheets, sheet)) {
-          // fromTo = workbook.Sheets[sheet]['!ref'];
-          // console.log(fromTo);
-          datas = datas.concat(
-            XLSX.utils.sheet_to_json(workbook.Sheets[sheet])
-          ); // break; // 如果只取第一张表，就取消注释这行
+
+    const resDatas = await new Promise((resolve) => {
+      fileReader.onload = (ev) => {
+        let workbook = null;
+        let datas = [];
+        try {
+          const data = ev.target.result;
+          workbook = XLSX.read(data, {
+            type: "binary",
+          }); // 以二进制流方式读取得到整份excel表格对象 //  // 存储获取到的数据
+        } catch (e) {
+          // console.log('文件类型不正确');
+        } // 表格的表格范围，可用于判断表头是否数量是否正确 // let fromTo = ''; // 遍历每张表读取
+        for (const sheet in workbook.Sheets) {
+          // if (workbook.Sheets.hasOwnProperty(sheet)) {
+          if (Object.prototype.hasOwnProperty.call(workbook.Sheets, sheet)) {
+            // fromTo = workbook.Sheets[sheet]['!ref'];
+            // console.log(fromTo);
+            datas = datas.concat(
+              XLSX.utils.sheet_to_json(workbook.Sheets[sheet])
+            ); // break; // 如果只取第一张表，就取消注释这行
+          }
         }
-      }
-      if (getdata && type) {
-        // type为传入参数 // getdata为取值用的函数
-        getdata(datas, type);
-      }
-      return datas;
-    };
+        console.log(datas, "datas");
+        if (getdata && type) {
+          // type为传入参数 // getdata为取值用的函数
+          getdata(datas, type);
+        }
+        resolve(datas);
+        return;
+      };
+    });
+    return resDatas;
   }
+
 }
 
 export { ClassExcelReadUtils };
