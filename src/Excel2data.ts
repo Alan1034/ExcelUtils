@@ -9,7 +9,7 @@
  * @FilePath: /ExcelUtils/src/Excel2data.ts
  */
 
-import xlsx from "xlsx";
+import * as XLSX from "xlsx";
 
 class ClassExcelReadUtils {
   constructor() {}
@@ -53,7 +53,7 @@ class ClassExcelReadUtils {
       let datas = [];
       try {
         const data = ev.target.result;
-        workbook = xlsx.read(data, {
+        workbook = XLSX.read(data, {
           type: "binary",
         }); // 以二进制流方式读取得到整份excel表格对象 //  // 存储获取到的数据
       } catch (e) {
@@ -65,7 +65,7 @@ class ClassExcelReadUtils {
           // fromTo = workbook.Sheets[sheet]['!ref'];
           // console.log(fromTo);
           datas = datas.concat(
-            xlsx.utils.sheet_to_json(workbook.Sheets[sheet])
+            XLSX.utils.sheet_to_json(workbook.Sheets[sheet])
           ); // break; // 如果只取第一张表，就取消注释这行
         }
       }
