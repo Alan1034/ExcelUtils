@@ -59,7 +59,7 @@ class ClassExcelReadUtils {
             type: "binary",
           }); // 以二进制流方式读取得到整份excel表格对象 //  // 存储获取到的数据
         } catch (e) {
-          // console.log('文件类型不正确');
+          console.warn("文件类型不正确");
         } // 表格的表格范围，可用于判断表头是否数量是否正确 // let fromTo = ''; // 遍历每张表读取
         for (const sheet in workbook.Sheets) {
           // if (workbook.Sheets.hasOwnProperty(sheet)) {
@@ -71,18 +71,16 @@ class ClassExcelReadUtils {
             ); // break; // 如果只取第一张表，就取消注释这行
           }
         }
-        console.log(datas, "datas");
         if (getdata && type) {
           // type为传入参数 // getdata为取值用的函数
           getdata(datas, type);
         }
         resolve(datas);
-        return;
       };
     });
+    // console.log(resDatas, "resDatas");
     return resDatas;
   }
-
 }
 
 export { ClassExcelReadUtils };

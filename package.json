@@ -2,7 +2,7 @@
   "name": "excel-utils-bt",
   "version": "1.0.7",
   "description": "",
-  "main": "./src/index.ts",
+  "main": "./dist/index.umd.cjs",
   "type": "module",
   "scripts": {
     "build": "cross-env CURRENT_ENV=prod run-p type-check && run-p build-only",
@@ -50,5 +50,17 @@
     "file-saver": "^2.0.5",
     "xlsx": "^0.18.5"
   },
-  "typings": "./publish/index.d.ts"
+  "typings": "./dist/index.d.ts",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.umd.cjs"
+    },
+    "./style": "./dist/index.css"
+  },
+  "files": [
+    "/dist"
+  ]
 }

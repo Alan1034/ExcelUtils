@@ -7,7 +7,7 @@
 #### 使用引入
 
 ```
-import { ExcelUtils } from 'excel-utils-bt'  
+import { ExcelUtils, ExcelReadUtils  } from 'excel-utils-bt'  
 ```
 
 #### 简单使用
@@ -60,6 +60,59 @@ el.addSheet('采购-拣货单', metaData, data) // 若 data为空，则为导出
 // 3、调用导出函数
 el.exportExcel()
 ```
+
+#### 表格文件上传并读取
+
+```
+//react，使用异步函数
+const upload = (event) => {
+  var e = window.event || event;
+  var File = e.target.files[0];
+  let reader = new FileReader();
+  const er = new ExcelReadUtils();
+
+  reader.onload = async function () {
+    const res = await er.dealBase64Data(reader.result);
+    console.log(res, 'res');
+  };
+  reader.readAsDataURL(File);
+};
+<Input
+  type="file"
+  onChange={upload}
+  accept=".xls,.xlsx"
+></Input>
+
+//vue，使用回调函数
+const er = new ExcelReadUtils();
+
+er.dealBase64Data(province, this.getdata, "省份区域" )
+
+getdata = (arr, type) => {
+   const { newMenuData } = this.state
+   this.setState({
+     newMenuData: newMenuData.map(ele => {
+       const { key } = ele
+       if (key === type) {
+         ele.children = arr.map(item => {
+           const { code, name } = item
+           return ({
+             ...item,
+             key: code,
+             title: name,
+             search: code,
+             icon: null,
+           })
+         })
+       }
+       return ele
+     }),
+   })
+ }
+
+
+```
+
 
 #### 获取导出进度
 
